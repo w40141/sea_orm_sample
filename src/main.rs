@@ -1,3 +1,5 @@
+mod entity;
+
 use sea_orm::Database;
 
 #[tokio::main]
