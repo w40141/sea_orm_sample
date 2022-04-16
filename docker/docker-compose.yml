@@ -5,7 +5,7 @@ services:
     cap_add:
       - SYS_NICE
     environment:
-      MYSQL_DATABASE: store
+      MYSQL_DATABASE: database
       MYSQL_ROOT_PASSWORD: root
       TZ: Asia/Tokyo
     volumes:

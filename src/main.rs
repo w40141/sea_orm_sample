@@ -1,10 +1,15 @@
 mod entity;
 
+use std::env;
+
+use dotenv::dotenv;
 use sea_orm::Database;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let _ = Database::connect("mysql://root:root@localhost:3306/store").await?;
+    dotenv().ok();
+    let database = env::var("DATABASE_URL")?;
+    let _ = Database::connect(database).await?;
     println!("hello");
     Ok(())
 }
