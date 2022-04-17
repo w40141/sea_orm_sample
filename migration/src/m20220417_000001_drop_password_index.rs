@@ -1,22 +1,24 @@
 use entity::user::*;
-use sea_orm::{DbBackend, Schema};
 use sea_schema::migration::prelude::*;
 
 pub struct Migration;
 
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20220101_000001_create_table"
+        "m20220417_000001_drop_password_index"
     }
 }
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let db_mysql = DbBackend::MySql;
-        let schema = Schema::new(db_mysql);
         manager
-            .create_table(schema.create_table_from_entity(Entity).to_owned())
+            .alter_table(
+                sea_query::Table::alter()
+                    .table(Entity)
+                    .drop_column(Column::Password)
+                    .to_owned(),
+            )
             .await
     }
 

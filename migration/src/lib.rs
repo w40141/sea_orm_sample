@@ -5,6 +5,7 @@ mod m20220416_000002_create_post_table;
 mod m20220416_000003_create_favorite_table;
 mod m20220416_000004_create_tag_table;
 mod m20220416_000005_create_post_tag_table;
+mod m20220417_000001_drop_password_index;
 
 pub struct Migrator;
 
@@ -17,6 +18,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20220416_000003_create_favorite_table::Migration),
             Box::new(m20220416_000004_create_tag_table::Migration),
             Box::new(m20220416_000005_create_post_tag_table::Migration),
+            Box::new(m20220417_000001_drop_password_index::Migration),
         ]
     }
 }

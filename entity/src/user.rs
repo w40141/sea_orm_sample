@@ -7,6 +7,7 @@ pub struct Model {
     pub id: i32,
     pub name: String,
     pub email: String,
+    #[sea_orm(column_name = "password")]
     pub password: String,
     pub enable: bool,
     pub created_at: Date,
