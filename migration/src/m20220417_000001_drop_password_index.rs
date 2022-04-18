@@ -1,4 +1,3 @@
-use entity::user::*;
 use sea_schema::migration::prelude::*;
 
 pub struct Migration;
@@ -9,14 +8,20 @@ impl MigrationName for Migration {
     }
 }
 
+#[derive(sea_query::Iden)]
+pub enum User {
+    Table,
+    Password,
+}
+
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .alter_table(
                 sea_query::Table::alter()
-                    .table(Entity)
-                    .drop_column(Column::Password)
+                    .table(User::Table)
+                    .drop_column(User::Password)
                     .to_owned(),
             )
             .await
@@ -24,7 +29,7 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Entity).to_owned())
+            .drop_table(Table::drop().table(User::Table).to_owned())
             .await
     }
 }

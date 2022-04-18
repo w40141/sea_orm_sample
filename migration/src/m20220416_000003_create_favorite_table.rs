@@ -1,5 +1,3 @@
-use entity::favorite::*;
-use sea_orm::{DbBackend, Schema};
 use sea_schema::migration::prelude::*;
 
 pub struct Migration;
@@ -10,19 +8,43 @@ impl MigrationName for Migration {
     }
 }
 
+#[derive(sea_query::Iden)]
+pub enum Favorite {
+    Table,
+    Id,
+    UserId,
+    PostId,
+    CreatedAt,
+    UpdatedAt,
+}
+
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let db_mysql = DbBackend::MySql;
-        let schema = Schema::new(db_mysql);
         manager
-            .create_table(schema.create_table_from_entity(Entity).to_owned())
+            .create_table(
+                sea_query::Table::create()
+                    .table(Favorite::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Favorite::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(Favorite::UserId).string().not_null())
+                    .col(ColumnDef::new(Favorite::PostId).string().not_null())
+                    .col(ColumnDef::new(Favorite::CreatedAt).timestamp().not_null())
+                    .col(ColumnDef::new(Favorite::UpdatedAt).timestamp().not_null())
+                    .to_owned(),
+            )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Entity).to_owned())
+            .drop_table(Table::drop().table(Favorite::Table).to_owned())
             .await
     }
 }

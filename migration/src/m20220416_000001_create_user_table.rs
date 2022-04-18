@@ -1,5 +1,3 @@
-use entity::user::*;
-use sea_orm::{DbBackend, Schema};
 use sea_schema::migration::prelude::*;
 
 pub struct Migration;
@@ -10,19 +8,52 @@ impl MigrationName for Migration {
     }
 }
 
+#[derive(sea_query::Iden)]
+pub enum User {
+    Table,
+    Id,
+    Name,
+    Email,
+    Password,
+    Enable,
+    CreatedAt,
+    UpdatedAt,
+}
+
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let db_mysql = DbBackend::MySql;
-        let schema = Schema::new(db_mysql);
         manager
-            .create_table(schema.create_table_from_entity(Entity).to_owned())
+            .create_table(
+                sea_query::Table::create()
+                    .table(User::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(User::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(User::Name).string().not_null())
+                    .col(ColumnDef::new(User::Email).string().not_null())
+                    .col(ColumnDef::new(User::Password).string().not_null())
+                    .col(
+                        ColumnDef::new(User::Enable)
+                            .boolean()
+                            .not_null()
+                            .default(true),
+                    )
+                    .col(ColumnDef::new(User::CreatedAt).timestamp().not_null())
+                    .col(ColumnDef::new(User::UpdatedAt).timestamp().not_null())
+                    .to_owned(),
+            )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Entity).to_owned())
+            .drop_table(Table::drop().table(User::Table).to_owned())
             .await
     }
 }
