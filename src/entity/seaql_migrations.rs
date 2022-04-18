@@ -8,72 +8,50 @@ pub struct Entity;
 
 impl EntityName for Entity {
     fn table_name(&self) -> &str {
-        "user"
+        "seaql_migrations"
     }
 }
 
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
-    pub id: i32,
-    pub name: String,
-    pub email: String,
-    pub enable: i8,
-    pub created_at: DateTimeUtc,
-    pub updated_at: DateTimeUtc,
+    pub version: String,
+    pub applied_at: i64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 pub enum Column {
-    Id,
-    Name,
-    Email,
-    Enable,
-    CreatedAt,
-    UpdatedAt,
+    Version,
+    AppliedAt,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
 pub enum PrimaryKey {
-    Id,
+    Version,
 }
 
 impl PrimaryKeyTrait for PrimaryKey {
-    type ValueType = i32;
+    type ValueType = String;
     fn auto_increment() -> bool {
-        true
+        false
     }
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]
-pub enum Relation {
-    Post,
-}
+pub enum Relation {}
 
 impl ColumnTrait for Column {
     type EntityName = Entity;
     fn def(&self) -> ColumnDef {
         match self {
-            Self::Id => ColumnType::Integer.def(),
-            Self::Name => ColumnType::String(Some(255u32)).def(),
-            Self::Email => ColumnType::String(Some(255u32)).def(),
-            Self::Enable => ColumnType::TinyInteger.def(),
-            Self::CreatedAt => ColumnType::Timestamp.def(),
-            Self::UpdatedAt => ColumnType::Timestamp.def(),
+            Self::Version => ColumnType::String(Some(255u32)).def(),
+            Self::AppliedAt => ColumnType::BigInteger.def(),
         }
     }
 }
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {
-        match self {
-            Self::Post => Entity::has_many(super::post::Entity).into(),
-        }
-    }
-}
-
-impl Related<super::post::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Post.def()
+        panic!("No RelationDef")
     }
 }
 

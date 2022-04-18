@@ -8,16 +8,15 @@ pub struct Entity;
 
 impl EntityName for Entity {
     fn table_name(&self) -> &str {
-        "user"
+        "post_tag"
     }
 }
 
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
     pub id: i32,
-    pub name: String,
-    pub email: String,
-    pub enable: i8,
+    pub post_id: String,
+    pub tag_id: String,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
 }
@@ -25,9 +24,8 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 pub enum Column {
     Id,
-    Name,
-    Email,
-    Enable,
+    PostId,
+    TagId,
     CreatedAt,
     UpdatedAt,
 }
@@ -45,18 +43,15 @@ impl PrimaryKeyTrait for PrimaryKey {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]
-pub enum Relation {
-    Post,
-}
+pub enum Relation {}
 
 impl ColumnTrait for Column {
     type EntityName = Entity;
     fn def(&self) -> ColumnDef {
         match self {
             Self::Id => ColumnType::Integer.def(),
-            Self::Name => ColumnType::String(Some(255u32)).def(),
-            Self::Email => ColumnType::String(Some(255u32)).def(),
-            Self::Enable => ColumnType::TinyInteger.def(),
+            Self::PostId => ColumnType::String(Some(255u32)).def(),
+            Self::TagId => ColumnType::String(Some(255u32)).def(),
             Self::CreatedAt => ColumnType::Timestamp.def(),
             Self::UpdatedAt => ColumnType::Timestamp.def(),
         }
@@ -65,15 +60,7 @@ impl ColumnTrait for Column {
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {
-        match self {
-            Self::Post => Entity::has_many(super::post::Entity).into(),
-        }
-    }
-}
-
-impl Related<super::post::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Post.def()
+        panic!("No RelationDef")
     }
 }
 

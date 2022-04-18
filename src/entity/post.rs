@@ -8,15 +8,15 @@ pub struct Entity;
 
 impl EntityName for Entity {
     fn table_name(&self) -> &str {
-        "user"
+        "post"
     }
 }
 
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
     pub id: i32,
-    pub name: String,
-    pub email: String,
+    pub content: String,
+    pub user_id: i32,
     pub enable: i8,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
@@ -25,8 +25,8 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 pub enum Column {
     Id,
-    Name,
-    Email,
+    Content,
+    UserId,
     Enable,
     CreatedAt,
     UpdatedAt,
@@ -46,7 +46,7 @@ impl PrimaryKeyTrait for PrimaryKey {
 
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {
-    Post,
+    User,
 }
 
 impl ColumnTrait for Column {
@@ -54,8 +54,8 @@ impl ColumnTrait for Column {
     fn def(&self) -> ColumnDef {
         match self {
             Self::Id => ColumnType::Integer.def(),
-            Self::Name => ColumnType::String(Some(255u32)).def(),
-            Self::Email => ColumnType::String(Some(255u32)).def(),
+            Self::Content => ColumnType::String(Some(255u32)).def(),
+            Self::UserId => ColumnType::Integer.def(),
             Self::Enable => ColumnType::TinyInteger.def(),
             Self::CreatedAt => ColumnType::Timestamp.def(),
             Self::UpdatedAt => ColumnType::Timestamp.def(),
@@ -66,14 +66,17 @@ impl ColumnTrait for Column {
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {
         match self {
-            Self::Post => Entity::has_many(super::post::Entity).into(),
+            Self::User => Entity::belongs_to(super::user::Entity)
+                .from(Column::UserId)
+                .to(super::user::Column::Id)
+                .into(),
         }
     }
 }
 
-impl Related<super::post::Entity> for Entity {
+impl Related<super::user::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Post.def()
+        Relation::User.def()
     }
 }
 
