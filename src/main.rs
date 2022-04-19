@@ -1,5 +1,3 @@
-mod entity;
-
 use std::env;
 
 use dotenv::dotenv;
