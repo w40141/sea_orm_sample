@@ -1,4 +1,5 @@
-use actix_web::{get, web, HttpResponse, Result};
+use actix_web::{get, post, web, HttpResponse};
+use anyhow::Result;
 use async_trait::async_trait;
 use derive_new::new;
 use std::sync::Arc;
@@ -37,6 +38,7 @@ pub async fn register_user() -> HttpResponse {
     )
 }
 
+#[post("/user/registered")]
 pub async fn registered(form: web::Form<User>) -> HttpResponse {
     let repository = Arc::new(UserRepository::new());
     let service = Arc::new(UserService::new(repository));
@@ -56,6 +58,6 @@ pub async fn registered(form: web::Form<User>) -> HttpResponse {
             }
             None => HttpResponse::InternalServerError().body(format!("error",)),
         },
-        Err(e) => HttpResponse::InternalServerError().body(format!("{}", e)),
+        Err(e) => HttpResponse::InternalServerError().body(format!("{e}")),
     }
 }

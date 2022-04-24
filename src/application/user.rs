@@ -1,4 +1,4 @@
-use actix_web::Result;
+use anyhow::Result;
 use async_trait::async_trait;
 use derive_new::new;
 use std::sync::Arc;
