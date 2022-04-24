@@ -1,32 +1,29 @@
-use anyhow::Result;
+use anyhow::{Ok, Result};
+use async_trait::async_trait;
 use derive_new::new;
-
-use crate::domain::user::User;
 use std::sync::Arc;
 
-pub trait IUserApplication {
-    async fn register(&self, user: &User) -> Result<Option<User>>;
-    // async fn delete(&self, user: &User) -> Result<Option<User>>;
-    // async fn change_name(&self, user: &User) -> Result<Option<User>>;
-    // async fn change_email(&self, user: &User) -> Result<Option<User>>;
+use crate::domain::user::User;
+use crate::infrastructure::user::UserRepository;
+use crate::presentation::user::IUserService;
+
+#[async_trait]
+pub trait IUserRepository {
+    async fn register(&self) -> Result<Option<User>>;
+    async fn delete(&self) -> Result<Option<User>>;
+    async fn change_name(&self) -> Result<Option<User>>;
+    async fn change_email(&self) -> Result<Option<User>>;
 }
 
 #[derive(new)]
-pub struct RegisterUserHandler {
-    user: User,
+pub struct UserService {
+    repository: Arc<dyn UserRepository + Sync + Send>,
 }
 
-#[async_trait::async_trait]
-pub trait IUserRepository {
-    async fn register(&self, user: &User) -> Result<Option<User>>;
-    async fn delete(&self, user: &User) -> Result<Option<User>>;
-    async fn change_name(&self, user: &User) -> Result<Option<User>>;
-    async fn change_email(&self, user: &User) -> Result<Option<User>>;
-}
-
-impl RegisterUserHandler {
-    pub async fn execute(&self, user: User) -> Result<User> {
-        Ok(self.user_domain.register(&user).await?)
+#[async_trait]
+impl IUserService for UserService {
+    async fn register(&self) -> Result<Option<User>> {
+        Ok(self.repository.register().await?)
     }
 }
 

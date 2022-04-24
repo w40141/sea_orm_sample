@@ -1,22 +1,26 @@
 use actix_web::{get, web, HttpResponse};
 use anyhow::Result;
+use async_trait::async_trait;
+use derive_new::new;
 use std::sync::Arc;
 
+use crate::application::user::UserService;
 use crate::domain::user::User;
+use crate::infrastructure::user::UserRepository;
 
-#[async_trait::async_trait]
+#[async_trait]
 pub trait IUserService {
-    async fn register(&self, user: &User) -> Result<Option<User>>;
+    async fn register(&self) -> Result<Option<User>>;
 }
 
-#[derive()]
-struct UserPresentation {
-    service: Arc<dyn IUserService + Sync + Send>,
+#[derive(new)]
+struct UserSurface {
+    service: Arc<dyn UserService + Sync + Send>,
 }
 
-impl UserPresentation {
-    async fn register(&self, user: &User) -> Result<Option<User>> {
-        Ok(self.service.register(user).await?)
+impl UserSurface {
+    async fn register(&self) -> Result<Option<User>> {
+        Ok(self.service.register().await?)
     }
 }
 
@@ -35,16 +39,11 @@ async fn register_user() -> HttpResponse {
 }
 
 async fn registered(form: web::Form<User>) -> Result<HttpResponse> {
-    let presentation = UserPresentation {
-        service: UserService,
-    };
-    let user_registered = presentation
-        .register(&User::new(
-            None,
-            form.name().to_owned(),
-            form.email().to_owned(),
-        ))
-        .await?;
+    let user = User::new(None, form.name().to_owned(), form.email().to_owned());
+    let repository = Arc::new(&UserRepository::new(user));
+    let service = Arc::new(&UserService::new(repository));
+    let presentation = Arc::new(&UserSurface::new(service));
+    let user_registered = presentation.register().await?;
     let response = match user_registered {
         Some(u) => {
             format!(

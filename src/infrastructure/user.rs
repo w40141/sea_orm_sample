@@ -1,15 +1,12 @@
 use anyhow::Result;
 use derive_new::new;
-use getset::Getters;
-use serde::{Deserialize, Serialize};
 
 use crate::application::user::IUserRepository;
 use crate::domain::user::User;
 
-#[derive(Debug, Serialize, Deserialize, new, Getters)]
-#[getset(get = "pub")]
+#[derive(new)]
 pub struct UserRepository {
-    user: User,
+    domain: User,
 }
 
 #[async_trait::async_trait]
