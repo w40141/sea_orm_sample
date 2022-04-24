@@ -1,5 +1,4 @@
-use actix_web::{get, web, HttpResponse};
-use anyhow::Result;
+use actix_web::{get, web, HttpResponse, Result};
 use async_trait::async_trait;
 use derive_new::new;
 use std::sync::Arc;
@@ -10,22 +9,22 @@ use crate::infrastructure::user::UserRepository;
 
 #[async_trait]
 pub trait IUserService {
-    async fn register(&self) -> Result<Option<User>>;
+    async fn register_service(&self, domain: &User) -> Result<Option<User>>;
 }
 
 #[derive(new)]
 struct UserSurface {
-    service: Arc<dyn UserService + Sync + Send>,
+    service: Box<Arc<dyn IUserService + Sync + Send>>,
 }
 
 impl UserSurface {
-    async fn register(&self) -> Result<Option<User>> {
-        Ok(self.service.register().await?)
+    async fn register(&self, domain: &User) -> Result<Option<User>> {
+        Ok(self.service.register_service(domain).await?)
     }
 }
 
 #[get("/user/register")]
-async fn register_user() -> HttpResponse {
+pub async fn register_user() -> HttpResponse {
     HttpResponse::Ok().content_type("text/html").body(
         r#"
             <title>Register User</title>
@@ -38,23 +37,25 @@ async fn register_user() -> HttpResponse {
     )
 }
 
-async fn registered(form: web::Form<User>) -> Result<HttpResponse> {
+pub async fn registered(form: web::Form<User>) -> HttpResponse {
+    let repository = Arc::new(UserRepository::new());
+    let service = Arc::new(UserService::new(repository));
+    let presentation = &UserSurface::new(Box::new(service));
     let user = User::new(None, form.name().to_owned(), form.email().to_owned());
-    let repository = Arc::new(&UserRepository::new(user));
-    let service = Arc::new(&UserService::new(repository));
-    let presentation = Arc::new(&UserSurface::new(service));
-    let user_registered = presentation.register().await?;
-    let response = match user_registered {
-        Some(u) => {
-            format!(
-                "Registered. ID = {:?}, Name = {}, Email = {}.\n",
-                u,
-                u.name(),
-                u.email()
-            )
-        }
-
-        None => String::from("Error"),
-    };
-    Ok(HttpResponse::Ok().content_type("text/html").body(response))
+    let result = presentation.register(&user).await;
+    match result {
+        Ok(user) => match user {
+            Some(u) => {
+                let response = format!(
+                    "Registered. ID = {:?}, Name = {}, Email = {}.\n",
+                    u,
+                    u.name(),
+                    u.email()
+                );
+                HttpResponse::Ok().content_type("text/html").body(response)
+            }
+            None => HttpResponse::InternalServerError().body(format!("error",)),
+        },
+        Err(e) => HttpResponse::InternalServerError().body(format!("{}", e)),
+    }
 }

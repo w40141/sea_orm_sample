@@ -1,29 +1,28 @@
-use anyhow::{Ok, Result};
+use actix_web::Result;
 use async_trait::async_trait;
 use derive_new::new;
 use std::sync::Arc;
 
 use crate::domain::user::User;
-use crate::infrastructure::user::UserRepository;
 use crate::presentation::user::IUserService;
 
 #[async_trait]
 pub trait IUserRepository {
-    async fn register(&self) -> Result<Option<User>>;
-    async fn delete(&self) -> Result<Option<User>>;
-    async fn change_name(&self) -> Result<Option<User>>;
-    async fn change_email(&self) -> Result<Option<User>>;
+    async fn register_user_into_db(&self, domain: &User) -> Result<Option<User>>;
+    async fn delete_user_from_db(&self, domain: &User) -> Result<Option<User>>;
+    async fn change_name_in_db(&self, domain: &User) -> Result<Option<User>>;
+    async fn change_email_in_db(&self, domain: &User) -> Result<Option<User>>;
 }
 
 #[derive(new)]
 pub struct UserService {
-    repository: Arc<dyn UserRepository + Sync + Send>,
+    repository: Arc<dyn IUserRepository + Sync + Send>,
 }
 
 #[async_trait]
 impl IUserService for UserService {
-    async fn register(&self) -> Result<Option<User>> {
-        Ok(self.repository.register().await?)
+    async fn register_service(&self, domain: &User) -> Result<Option<User>> {
+        Ok(self.repository.register_user_into_db(domain).await?)
     }
 }
 
