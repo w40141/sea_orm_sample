@@ -10,7 +10,10 @@ use crate::infrastructure::user::UserRepository;
 
 #[async_trait]
 pub trait IUserService {
-    async fn register_service(&self, domain: &User) -> Result<User>;
+    async fn register_user_service(&self, domain: &User) -> Result<User>;
+    async fn delete_user_service(&self, domain: &User) -> Result<User>;
+    async fn change_user_name_service(&self, domain: &User) -> Result<User>;
+    async fn change_user_email_service(&self, domain: &User) -> Result<User>;
 }
 
 #[derive(new)]
@@ -20,7 +23,7 @@ struct UserSurface {
 
 impl UserSurface {
     async fn register(&self, domain: &User) -> Result<User> {
-        Ok(self.service.register_service(domain).await?)
+        Ok(self.service.register_user_service(domain).await?)
     }
 }
 
@@ -40,7 +43,6 @@ pub async fn register_user() -> HttpResponse {
 
 #[post("/user/registered")]
 pub async fn registered(form: web::Form<User>) -> HttpResponse {
-    log::info!("{form:?}");
     let repository = Arc::new(UserRepository::new());
     let service = Arc::new(UserService::new(repository));
     let presentation = &UserSurface::new(Box::new(service));
@@ -56,6 +58,9 @@ pub async fn registered(form: web::Form<User>) -> HttpResponse {
             );
             HttpResponse::Ok().content_type("text/html").body(response)
         }
-        Err(e) => HttpResponse::InternalServerError().body(format!("{e}")),
+        Err(e) => {
+            log::error!("{e:?}");
+            HttpResponse::InternalServerError().body(format!("Internal Server Error"))
+        }
     }
 }

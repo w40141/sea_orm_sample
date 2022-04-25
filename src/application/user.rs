@@ -21,40 +21,16 @@ pub struct UserService {
 
 #[async_trait]
 impl IUserService for UserService {
-    async fn register_service(&self, domain: &User) -> Result<User> {
+    async fn register_user_service(&self, domain: &User) -> Result<User> {
         Ok(self.repository.register_user_into_db(domain).await?)
     }
+    async fn delete_user_service(&self, domain: &User) -> Result<User> {
+        Ok(self.repository.delete_user_from_db(domain).await?)
+    }
+    async fn change_user_name_service(&self, domain: &User) -> Result<User> {
+        Ok(self.repository.change_name_in_db(domain).await?)
+    }
+    async fn change_user_email_service(&self, domain: &User) -> Result<User> {
+        Ok(self.repository.change_email_in_db(domain).await?)
+    }
 }
-
-// #[derive(new)]
-// pub struct DeleteUserHandler {
-//     user_mantle: Arc<dyn UserDomain + Sync + Send>,
-// }
-//
-// impl DeleteUserHandler {
-//     pub async fn execute(&self, user: User) -> Result<User> {
-//         Ok(self.user_mantle.delete(&user).await?)
-//     }
-// }
-//
-// #[derive(new)]
-// pub struct ChangeNameHandler {
-//     user_mantle: Arc<dyn UserDomain + Sync + Send>,
-// }
-//
-// impl ChangeNameHandler {
-//     pub async fn execute(&self, user: User) -> Result<User> {
-//         Ok(self.user_mantle.change_name(&user).await?)
-//     }
-// }
-//
-// #[derive(new)]
-// pub struct ChangeEmailHandler {
-//     user_mantle: Arc<dyn UserDomain + Sync + Send>,
-// }
-//
-// impl ChangeEmailHandler {
-//     pub async fn execute(&self, user: User) -> Result<User> {
-//         Ok(self.user_mantle.change_email(&user).await?)
-//     }
-// }
