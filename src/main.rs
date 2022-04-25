@@ -1,13 +1,17 @@
-use std::env;
-
+use actix_web::{App, HttpServer};
 use dotenv::dotenv;
-use sea_orm::Database;
+use std::io;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+use sea_orm_sample::presentation::user::{register_user, registered};
+
+// #[tokio::main]
+#[actix_web::main]
+async fn main() -> io::Result<()> {
     dotenv().ok();
-    let database = env::var("DATABASE_URL")?;
-    let _ = Database::connect(database).await?;
-    println!("hello");
-    Ok(())
+    env_logger::init();
+
+    HttpServer::new(|| App::new().service(register_user).service(registered))
+        .bind(("127.0.0.1", 8080))?
+        .run()
+        .await
 }
