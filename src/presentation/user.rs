@@ -10,7 +10,7 @@ use crate::infrastructure::user::UserRepository;
 
 #[async_trait]
 pub trait IUserService {
-    async fn register_service(&self, domain: &User) -> Result<Option<User>>;
+    async fn register_service(&self, domain: &User) -> Result<User>;
 }
 
 #[derive(new)]
@@ -19,7 +19,7 @@ struct UserSurface {
 }
 
 impl UserSurface {
-    async fn register(&self, domain: &User) -> Result<Option<User>> {
+    async fn register(&self, domain: &User) -> Result<User> {
         Ok(self.service.register_service(domain).await?)
     }
 }
@@ -29,9 +29,9 @@ pub async fn register_user() -> HttpResponse {
     HttpResponse::Ok().content_type("text/html").body(
         r#"
             <title>Register User</title>
-            <form action="/registered" method="post">
-                <input type="text" name="Name"/>
-                <input type="text" name="Email"/>
+            <form action="/user/registered" method="post">
+                <input type="text" name="name"/>
+                <input type="text" name="email"/>
                 <button type="submit">Register User</button>
             </form>
         "#,
@@ -40,24 +40,22 @@ pub async fn register_user() -> HttpResponse {
 
 #[post("/user/registered")]
 pub async fn registered(form: web::Form<User>) -> HttpResponse {
+    log::info!("{form:?}");
     let repository = Arc::new(UserRepository::new());
     let service = Arc::new(UserService::new(repository));
     let presentation = &UserSurface::new(Box::new(service));
     let user = User::new(None, form.name().to_owned(), form.email().to_owned());
     let result = presentation.register(&user).await;
     match result {
-        Ok(user) => match user {
-            Some(u) => {
-                let response = format!(
-                    "Registered. ID = {:?}, Name = {}, Email = {}.\n",
-                    u,
-                    u.name(),
-                    u.email()
-                );
-                HttpResponse::Ok().content_type("text/html").body(response)
-            }
-            None => HttpResponse::InternalServerError().body(format!("error",)),
-        },
+        Ok(user) => {
+            let response = format!(
+                "Registered. ID = {:?}, Name = {}, Email = {}.\n",
+                user.id(),
+                user.name(),
+                user.email()
+            );
+            HttpResponse::Ok().content_type("text/html").body(response)
+        }
         Err(e) => HttpResponse::InternalServerError().body(format!("{e}")),
     }
 }
