@@ -1,4 +1,4 @@
-use sea_schema::migration::prelude::*;
+use sea_schema::{migration::prelude::*, sea_query::Nullable};
 
 pub struct Migration;
 
@@ -15,6 +15,7 @@ pub enum User {
     Name,
     Email,
     Password,
+    Profile,
     Enable,
     CreatedAt,
     UpdatedAt,
@@ -38,6 +39,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(User::Name).string().not_null())
                     .col(ColumnDef::new(User::Email).string().not_null().unique_key())
                     .col(ColumnDef::new(User::Password).string().not_null())
+                    .col(ColumnDef::new(User::Profile).string_len(400))
                     .col(
                         ColumnDef::new(User::Enable)
                             .boolean()
