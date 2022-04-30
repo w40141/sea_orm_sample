@@ -18,6 +18,18 @@ pub enum Favorite {
     UpdatedAt,
 }
 
+#[derive(sea_query::Iden)]
+pub enum Post {
+    Table,
+    Id,
+}
+
+#[derive(sea_query::Iden)]
+pub enum User {
+    Table,
+    Id,
+}
+
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
@@ -28,15 +40,31 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(Favorite::Id)
-                            .integer()
+                            .big_unsigned()
                             .not_null()
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Favorite::UserId).string().not_null())
-                    .col(ColumnDef::new(Favorite::PostId).string().not_null())
+                    .col(ColumnDef::new(Favorite::UserId).big_unsigned().not_null())
+                    .col(ColumnDef::new(Favorite::PostId).big_unsigned().not_null())
                     .col(ColumnDef::new(Favorite::CreatedAt).timestamp().not_null())
                     .col(ColumnDef::new(Favorite::UpdatedAt).timestamp().not_null())
+                    .foreign_key(
+                        sea_query::ForeignKey::create()
+                            .name("fk_user_id_favorite")
+                            .from(Favorite::Table, Favorite::UserId)
+                            .to(User::Table, User::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        sea_query::ForeignKey::create()
+                            .name("fk_post_id_favorite")
+                            .from(Favorite::Table, Favorite::PostId)
+                            .to(Post::Table, Post::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
                     .to_owned(),
             )
             .await
