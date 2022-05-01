@@ -7,8 +7,8 @@ use crate::domain::user::User;
 use crate::presentation::user::IUserService;
 
 #[async_trait]
-pub trait IUserRepository {
-    async fn register_user_into_db(&self, domain: &User) -> Result<User>;
+pub trait IUserDomain {
+    async fn register_user_into_db(&self) -> Result<User>;
     async fn delete_user_from_db(&self, domain: &User) -> Result<User>;
     async fn change_name_in_db(&self, domain: &User) -> Result<User>;
     async fn change_email_in_db(&self, domain: &User) -> Result<User>;
@@ -16,7 +16,7 @@ pub trait IUserRepository {
 
 #[derive(new)]
 pub struct UserService {
-    repository: Arc<dyn IUserRepository + Sync + Send>,
+    repository: Arc<dyn IUserDomain + Sync + Send>,
 }
 
 #[async_trait]

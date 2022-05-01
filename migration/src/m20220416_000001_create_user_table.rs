@@ -1,4 +1,4 @@
-use sea_schema::{migration::prelude::*, sea_query::Nullable};
+use sea_schema::migration::prelude::*;
 
 pub struct Migration;
 

@@ -3,19 +3,19 @@ use derive_new::new;
 use sea_orm::prelude::ChronoDateTimeLocal;
 use sea_orm::{ActiveModelTrait, Database, Set};
 
-use crate::application::user::IUserRepository;
+use crate::domain::user::IUserRepository;
 use crate::domain::user::User;
 use crate::entity::user::{ActiveModel, Model};
 
-use super::configure::get_db_url;
+use super::configure::connection;
 
 #[derive(new)]
 pub struct UserRepository {}
 
 #[async_trait::async_trait]
 impl IUserRepository for UserRepository {
-    async fn register_user_into_db(&self, domain: &User) -> Result<User> {
-        let db = Database::connect(get_db_url().await).await?;
+    async fn insert(&self, domain: &User) -> Result<User> {
+        let db = connection().await;
         let user = ActiveModel {
             name: Set(domain.name().to_owned()),
             email: Set(domain.email().to_owned()),
@@ -24,7 +24,13 @@ impl IUserRepository for UserRepository {
             ..Default::default()
         };
         let user: Model = user.insert(&db).await?;
-        Ok(User::new(Some(user.id), user.name, user.email))
+        Ok(User::new(
+            Some(user.id),
+            user.name,
+            user.email,
+            "aaa",
+            "aaaa",
+        ))
     }
 
     async fn delete_user_from_db(&self, domain: &User) -> Result<User> {
