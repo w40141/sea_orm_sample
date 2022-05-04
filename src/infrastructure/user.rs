@@ -3,9 +3,8 @@ use derive_new::new;
 use sea_orm::prelude::ChronoDateTimeLocal;
 use sea_orm::{ActiveModelTrait, Database, Set};
 
-use crate::domain::user::IUserRepository;
-use crate::domain::user::User;
-use crate::entity::user::{ActiveModel, Model};
+use crate::domain::user::{IUserRepository, User};
+use crate::entity::user::ActiveModel;
 
 use super::configure::connection;
 
@@ -14,34 +13,43 @@ pub struct UserRepository {}
 
 #[async_trait::async_trait]
 impl IUserRepository for UserRepository {
-    async fn insert(&self, domain: &User) -> Result<User> {
-        let db = connection().await;
-        let user = ActiveModel {
-            name: Set(domain.name().to_owned()),
-            email: Set(domain.email().to_owned()),
+    async fn insert(&self, user_domain: &User) -> Result<i64> {
+        let db = connection().await?;
+        let active_model = ActiveModel {
+            name: Set(user_domain.name().to_owned()),
+            email: Set(user_domain.email().into()),
+            password: Set(user_domain.password().into()),
+            profile: Set(user_domain.profile().to_owned()),
             created_at: Set(chrono::Utc::now()),
             updated_at: Set(chrono::Utc::now()),
             ..Default::default()
         };
-        let user: Model = user.insert(&db).await?;
-        Ok(User::new(
-            Some(user.id),
-            user.name,
-            user.email,
-            "aaa",
-            "aaaa",
-        ))
+        let user_model = active_model.insert(&db).await?;
+        Ok(user_model)
     }
 
-    async fn delete_user_from_db(&self, domain: &User) -> Result<User> {
+    async fn find_by_name(&self, name: String) -> Result<User> {
         todo!()
     }
-
-    async fn change_name_in_db(&self, domain: &User) -> Result<User> {
+    async fn find_by_email(&self, email: String) -> Result<User> {
         todo!()
     }
-
-    async fn change_email_in_db(&self, domain: &User) -> Result<User> {
+    async fn delete(&self, user: &User) -> Result<()> {
+        todo!()
+    }
+    async fn update_name(&self, user: &User, name: String) -> Result<()> {
+        todo!()
+    }
+    async fn update_email(&self, user: &User, email: String) -> Result<()> {
+        todo!()
+    }
+    async fn update_profile(&self, user: &User, profile: String) -> Result<()> {
+        todo!()
+    }
+    async fn update_password(&self, user: &User, password: String) -> Result<()> {
+        todo!()
+    }
+    async fn list(&self) -> Result<Vec<User>> {
         todo!()
     }
 }

@@ -3,71 +3,33 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Clone, Default, Debug, DeriveEntity)]
-pub struct Entity;
-
-impl EntityName for Entity {
-    fn table_name(&self) -> &str {
-        "user"
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "user")]
 pub struct Model {
-    pub id: i32,
+    #[sea_orm(primary_key)]
+    pub id: u64,
+    #[sea_orm(unique)]
     pub name: String,
+    #[sea_orm(unique)]
     pub email: String,
+    pub password: String,
+    pub profile: Option<String>,
     pub enable: i8,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
 }
 
-#[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
-pub enum Column {
-    Id,
-    Name,
-    Email,
-    Enable,
-    CreatedAt,
-    UpdatedAt,
-}
-
-#[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
-pub enum PrimaryKey {
-    Id,
-}
-
-impl PrimaryKeyTrait for PrimaryKey {
-    type ValueType = i32;
-    fn auto_increment() -> bool {
-        true
-    }
-}
-
-#[derive(Copy, Clone, Debug, EnumIter)]
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::favorite::Entity")]
+    Favorite,
+    #[sea_orm(has_many = "super::post::Entity")]
     Post,
 }
 
-impl ColumnTrait for Column {
-    type EntityName = Entity;
-    fn def(&self) -> ColumnDef {
-        match self {
-            Self::Id => ColumnType::Integer.def(),
-            Self::Name => ColumnType::String(Some(255u32)).def(),
-            Self::Email => ColumnType::String(Some(255u32)).def(),
-            Self::Enable => ColumnType::TinyInteger.def(),
-            Self::CreatedAt => ColumnType::Timestamp.def(),
-            Self::UpdatedAt => ColumnType::Timestamp.def(),
-        }
-    }
-}
-
-impl RelationTrait for Relation {
-    fn def(&self) -> RelationDef {
-        match self {
-            Self::Post => Entity::has_many(super::post::Entity).into(),
-        }
+impl Related<super::favorite::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Favorite.def()
     }
 }
 

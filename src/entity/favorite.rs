@@ -3,64 +3,46 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Clone, Default, Debug, DeriveEntity)]
-pub struct Entity;
-
-impl EntityName for Entity {
-    fn table_name(&self) -> &str {
-        "favorite"
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "favorite")]
 pub struct Model {
-    pub id: i32,
-    pub user_id: String,
-    pub post_id: String,
+    #[sea_orm(primary_key)]
+    pub id: u64,
+    pub user_id: u64,
+    pub post_id: u64,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
 }
 
-#[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
-pub enum Column {
-    Id,
-    UserId,
-    PostId,
-    CreatedAt,
-    UpdatedAt,
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::post::Entity",
+        from = "Column::PostId",
+        to = "super::post::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    Post,
+    #[sea_orm(
+        belongs_to = "super::user::Entity",
+        from = "Column::UserId",
+        to = "super::user::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    User,
 }
 
-#[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
-pub enum PrimaryKey {
-    Id,
-}
-
-impl PrimaryKeyTrait for PrimaryKey {
-    type ValueType = i32;
-    fn auto_increment() -> bool {
-        true
+impl Related<super::post::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Post.def()
     }
 }
 
-#[derive(Copy, Clone, Debug, EnumIter)]
-pub enum Relation {}
-
-impl ColumnTrait for Column {
-    type EntityName = Entity;
-    fn def(&self) -> ColumnDef {
-        match self {
-            Self::Id => ColumnType::Integer.def(),
-            Self::UserId => ColumnType::String(Some(255u32)).def(),
-            Self::PostId => ColumnType::String(Some(255u32)).def(),
-            Self::CreatedAt => ColumnType::Timestamp.def(),
-            Self::UpdatedAt => ColumnType::Timestamp.def(),
-        }
-    }
-}
-
-impl RelationTrait for Relation {
-    fn def(&self) -> RelationDef {
-        panic!("No RelationDef")
+impl Related<super::user::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::User.def()
     }
 }
 

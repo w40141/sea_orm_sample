@@ -4,41 +4,33 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "post")]
+#[sea_orm(table_name = "follower")]
 pub struct Model {
-    #[sea_orm(primary_key, unique)]
+    #[sea_orm(primary_key)]
     pub id: u64,
-    pub content: String,
-    pub user_id: u64,
+    pub followed_id: u64,
+    pub following_id: u64,
     pub enable: i8,
-    pub created_at: DateTimeUtc,
-    pub updated_at: DateTimeUtc,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::user::Entity",
-        from = "Column::UserId",
+        from = "Column::FollowedId",
         to = "super::user::Column::Id",
         on_update = "Cascade",
         on_delete = "Cascade"
     )]
-    User,
-    #[sea_orm(has_many = "super::favorite::Entity")]
-    Favorite,
-}
-
-impl Related<super::user::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::User.def()
-    }
-}
-
-impl Related<super::favorite::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Favorite.def()
-    }
+    User2,
+    #[sea_orm(
+        belongs_to = "super::user::Entity",
+        from = "Column::FollowingId",
+        to = "super::user::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    User1,
 }
 
 impl ActiveModelBehavior for ActiveModel {}

@@ -36,7 +36,7 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(User::Name).string().not_null())
+                    .col(ColumnDef::new(User::Name).string().not_null().unique_key())
                     .col(ColumnDef::new(User::Email).string().not_null().unique_key())
                     .col(ColumnDef::new(User::Password).string().not_null())
                     .col(ColumnDef::new(User::Profile).string_len(400))
