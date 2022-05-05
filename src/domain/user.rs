@@ -60,6 +60,7 @@ pub struct User {
     password: Password,
     #[builder(default)]
     profile: Option<String>,
+    enable: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, new, Getters, Clone, Validate, PartialEq)]
@@ -82,12 +83,37 @@ mod tests {
     use super::*;
 
     #[test]
+    fn password_test() {
+        {
+            let password = Password::new("1234".to_string());
+            assert_eq!(password.validate().is_err(), true);
+        }
+        {
+            let password = Password::new("12345678".to_string());
+            assert_eq!(password.validate().is_ok(), true);
+        }
+    }
+
+    #[test]
+    fn email_test() {
+        {
+            let email = Email::new("1234".to_string());
+            assert_eq!(email.validate().is_err(), true);
+        }
+        {
+            let email = Email::new("12345678@test.com".to_string());
+            assert_eq!(email.validate().is_ok(), true);
+        }
+    }
+
+    #[test]
     fn user_test() {
         {
             let test_user_0: Result<User, UserBuilderError> = UserBuilder::default()
                 .email(Email::new("test@test.com".to_string()))
                 .name("daisuke")
                 .password(Password::new("12345678".to_string()))
+                .enable(true)
                 .build();
             // println!("{:?}", &test_user_0.unwrap().as_ref());
             assert_eq!(&test_user_0.is_ok(), &true);
@@ -98,17 +124,17 @@ mod tests {
                     email: Email::new("test@test.com".to_string()),
                     name: "daisuke".to_string(),
                     password: Password::new("12345678".to_string()),
-                    profile: None
+                    profile: None,
+                    enable: true,
                 }
             );
-            assert_eq!(user.password().validate().is_ok(), true);
-            assert_eq!(user.email().validate().is_ok(), true);
         }
         {
             let test_user_0: Result<User, UserBuilderError> = UserBuilder::default()
                 .email(Email::new("testtest.com".to_string()))
                 .name("daisuke")
                 .password(Password::new("123456".to_string()))
+                .enable(true)
                 .build();
             assert_eq!(&test_user_0.is_ok(), &true);
             let user = test_user_0.unwrap();
@@ -118,11 +144,10 @@ mod tests {
                     email: Email::new("testtest.com".to_string()),
                     name: "daisuke".to_string(),
                     password: Password::new("123456".to_string()),
-                    profile: None
+                    profile: None,
+                    enable: true,
                 }
             );
-            assert_eq!(user.password().validate().is_err(), true);
-            assert_eq!(user.email().validate().is_err(), true);
         }
     }
 }

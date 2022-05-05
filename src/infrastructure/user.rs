@@ -1,6 +1,7 @@
-use anyhow::{anyhow, Ok, Result};
+use anyhow::{anyhow, Result};
 use derive_new::new;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
+use validator::Validate;
 
 use super::configure::connection;
 use crate::domain::user::{Email, IUserRepository, Password, User, UserBuilder};
@@ -13,6 +14,10 @@ pub struct UserRepository {}
 impl IUserRepository for UserRepository {
     async fn insert(&self, user_domain: &User) -> Result<u64> {
         let db = connection().await?;
+        {
+            user_domain.password().validate()?;
+            user_domain.email().validate()?;
+        }
         let active_model = ActiveModel {
             name: Set(user_domain.name().to_string()),
             email: Set(user_domain.email().email().to_string()),
@@ -145,6 +150,7 @@ impl IUserRepository for UserRepository {
             .await?;
         match model {
             Some(m) if m.password == password.to_string() => {
+                Email::new(new_email.to_string()).validate()?;
                 let mut active_model: ActiveModel = m.into();
                 active_model.email = Set(new_email.to_owned());
                 let _ = active_model.update(&db).await?;
@@ -157,7 +163,7 @@ impl IUserRepository for UserRepository {
 
     async fn list(&self) -> Result<Vec<User>> {
         let db = connection().await?;
-        let models = UserEntity::find_by_id(1).all(&db).await?;
+        let models = UserEntity::find().all(&db).await?;
         Ok(models
             .into_iter()
             .filter_map(|m| {
