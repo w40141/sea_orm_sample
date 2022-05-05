@@ -1,14 +1,32 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use derive_new::new;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, QueryOrder, Set};
+use migration::JoinType;
+
+use sea_orm::prelude::DateTimeUtc;
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, EntityTrait, FromQueryResult, QueryFilter, QueryOrder,
+    QuerySelect, RelationTrait, Set,
+};
 use validator::Validate;
 
 use super::configure::connection;
 use crate::domain::post::{IPostRepository, Post, PostBuilder, PostContent};
 use crate::entity::post::{self, ActiveModel, Entity as PostEntity};
+use crate::entity::user;
 
 #[derive(new)]
 pub struct PostRepository {}
+
+#[derive(FromQueryResult)]
+struct PostWithUser {
+    id: u64,
+    name: String,
+    content: String,
+    user_id: u64,
+    enable: i8,
+    created_at: DateTimeUtc,
+    updated_at: DateTimeUtc,
+}
 
 #[async_trait::async_trait]
 impl IPostRepository for PostRepository {
@@ -28,27 +46,34 @@ impl IPostRepository for PostRepository {
         Ok(model.id)
     }
 
-    async fn find_by_id(&self, id: &u64) -> Result<Option<(u64, Post)>> {
-        let db = connection().await?;
-        let model = PostEntity::find_by_id(id.to_owned()).one(&db).await?;
-        let m = if let Some(m) = model {
-            Some((
-                m.id,
-                PostBuilder::default()
-                    .user_id(m.user_id)
-                    .content(PostContent::new(m.content))
-                    .build()?,
-            ))
-        } else {
-            None
-        };
-        Ok(m)
-    }
-
     async fn find_by_user_id(&self, user_id: &u64) -> Result<Vec<Post>> {
         let db = connection().await?;
         let models = PostEntity::find()
+            .column_as(user::Column::Name, "name")
+            .join(JoinType::InnerJoin, user::Relation::Post.def())
             .filter(post::Column::UserId.eq(user_id.clone()))
+            .order_by_asc(post::Column::CreatedAt)
+            .into_model::<PostWithUser>()
+            .all(&db)
+            .await?;
+        Ok(models
+            .into_iter()
+            .filter_map(|m| {
+                PostBuilder::default()
+                    .user_id(m.user_id)
+                    .name(m.name)
+                    .content(PostContent::new(m.content))
+                    .build()
+                    .ok()
+            })
+            .collect())
+    }
+
+    async fn find_by_user_name(&self, name: &String) -> Result<Vec<Post>> {
+        let db = connection().await?;
+        let models = PostEntity::find()
+            .join(JoinType::InnerJoin, user::Relation::Post.def())
+            .filter(user::Column::Name.eq(name.clone()))
             .order_by_asc(post::Column::CreatedAt)
             .all(&db)
             .await?;
@@ -57,6 +82,7 @@ impl IPostRepository for PostRepository {
             .filter_map(|m| {
                 PostBuilder::default()
                     .user_id(m.user_id)
+                    .name(name.to_string())
                     .content(PostContent::new(m.content))
                     .build()
                     .ok()
@@ -64,18 +90,20 @@ impl IPostRepository for PostRepository {
             .collect())
     }
 
-    async fn find_by_user_name(&self, name: &String) -> Result<Option<(u64, Post)>> {
-        todo!()
-    }
-
     async fn list(&self) -> Result<Vec<Post>> {
         let db = connection().await?;
-        let models = PostEntity::find().all(&db).await?;
+        let models = PostEntity::find()
+            .column_as(user::Column::Name, "name")
+            .join(JoinType::InnerJoin, user::Relation::Post.def())
+            .into_model::<PostWithUser>()
+            .all(&db)
+            .await?;
         Ok(models
             .into_iter()
             .filter_map(|m| {
                 PostBuilder::default()
                     .user_id(m.user_id)
+                    .name(m.name)
                     .content(PostContent::new(m.content))
                     .build()
                     .ok()

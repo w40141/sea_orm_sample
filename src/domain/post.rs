@@ -9,9 +9,8 @@ use validator::Validate;
 #[async_trait]
 pub trait IPostRepository {
     async fn insert(&self, user: &Post) -> Result<u64>;
-    async fn find_by_id(&self, id: &u64) -> Result<Option<(u64, Post)>>;
     async fn find_by_user_id(&self, user_id: &u64) -> Result<Vec<Post>>;
-    async fn find_by_user_name(&self, name: &String) -> Result<Option<(u64, Post)>>;
+    async fn find_by_user_name(&self, name: &String) -> Result<Vec<Post>>;
     async fn list(&self) -> Result<Vec<Post>>;
 }
 
@@ -20,6 +19,7 @@ pub trait IPostRepository {
 #[builder(setter(into))]
 pub struct Post {
     user_id: u64,
+    name: String,
     content: PostContent,
 }
 
@@ -71,6 +71,7 @@ mod tests {
                 post,
                 Post {
                     user_id: 1,
+                    name: "Taro".to_string(),
                     content: PostContent::new("test".to_string())
                 }
             );
