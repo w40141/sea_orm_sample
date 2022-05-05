@@ -63,6 +63,7 @@ mod tests {
         {
             let post: Result<Post, PostBuilderError> = PostBuilder::default()
                 .user_id(1 as u64)
+                .name("Taro".to_string())
                 .content(PostContent::new("test".to_string()))
                 .build();
             assert_eq!(&post.is_ok(), &true);
