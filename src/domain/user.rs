@@ -8,30 +8,50 @@ use validator::Validate;
 
 #[async_trait]
 pub trait IUserRepository {
-    async fn find_by_name(&self, name: String) -> Result<User>;
-    async fn find_by_email(&self, email: String) -> Result<User>;
-    async fn insert(&self, user: &User) -> Result<i64>;
-    async fn delete(&self, user: &User) -> Result<()>;
-    async fn update_name(&self, user: &User, name: String) -> Result<()>;
-    async fn update_email(&self, user: &User, email: String) -> Result<()>;
-    async fn update_profile(&self, user: &User, profile: String) -> Result<()>;
-    async fn update_password(&self, user: &User, password: String) -> Result<()>;
+    async fn insert(&self, user: &User) -> Result<u64>;
+    async fn find_by_id(&self, id: &u64) -> Result<Option<(u64, User)>>;
+    async fn find_by_name(&self, name: &String) -> Result<Option<(u64, User)>>;
+    async fn find_by_email(&self, email: &String) -> Result<Option<(u64, User)>>;
+    async fn delete_by_id(&self, id: &u64, password: &String) -> Result<()>;
+    async fn delete_by_name(&self, name: &String, password: &String) -> Result<()>;
+    async fn update_name(
+        &self,
+        old_name: &String,
+        password: &String,
+        new_name: &String,
+    ) -> Result<()>;
+    async fn update_email(
+        &self,
+        old_email: &String,
+        password: &String,
+        new_email: &String,
+    ) -> Result<()>;
+    // async fn update_password(&self, user: &User, password: String) -> Result<()>;
     async fn list(&self) -> Result<Vec<User>>;
-    async fn exist_by_name(&self, name: String) -> bool {
-        match self.find_by_name(name).await {
-            Ok(_) => true,
-            _ => false,
-        }
+    async fn exist_by_id(&self, id: &u64) -> Result<bool> {
+        let f = match self.find_by_id(&id).await? {
+            Some(_) => true,
+            None => false,
+        };
+        Ok(f)
     }
-    async fn exist_by_email(&self, email: String) -> bool {
-        match self.find_by_email(email).await {
-            Ok(_) => true,
-            _ => false,
-        }
+    async fn exist_by_name(&self, name: &String) -> Result<bool> {
+        let f = match self.find_by_name(&name).await? {
+            Some(_) => true,
+            None => false,
+        };
+        Ok(f)
+    }
+    async fn exist_by_email(&self, email: &String) -> Result<bool> {
+        let f = match self.find_by_email(&email).await? {
+            Some(_) => true,
+            None => false,
+        };
+        Ok(f)
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, new, Getters, Clone, Builder, Validate, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, new, Getters, Clone, Builder, PartialEq)]
 #[getset(get = "pub")]
 #[builder(setter(into))]
 pub struct User {
@@ -42,13 +62,15 @@ pub struct User {
     profile: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, new, Validate, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, new, Getters, Clone, Validate, PartialEq)]
+#[getset(get = "pub")]
 pub struct Email {
     #[validate(email)]
     email: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, new, Validate, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, new, Getters, Clone, Validate, PartialEq)]
+#[getset(get = "pub")]
 pub struct Password {
     #[validate(length(min = 8))]
     password: String,
